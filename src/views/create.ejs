@@ -1,0 +1,43 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+  
+<body>
+    <div class="topnav">
+        <a  href="/">Home</a>
+        <a class="active" href="/create">Create Account</a>
+        <a href="/login">Login</a>
+        <a href="/add-Card">Add Card</a>
+
+      </div>
+      <div class="form">
+        <form action="/create-users" method="post">
+        <fieldset>
+            <legend>
+                NEW USERS
+            </legend>
+        <div class="input-group">
+            <label for="">Ho Ten</label>
+            <input type="text"name = "hoten"/>
+        </div>
+        <div class="input-group">
+            <label for="">Email</label>
+            <input type="text"name = "email"/>
+        </div>
+        <div class="input-group">
+            <label for="">Mat Khau</label>
+            <input type="password" name = "matkhau"/>
+        </div>
+        <div class="button-dangky">
+            <button>dang ky</button>
+        </div>
+    </fieldset>
+</form>
+      </div>
+</body>
+</html>

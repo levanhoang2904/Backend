@@ -2,12 +2,16 @@
 const connection = require('../config/database');
 const { json } = require('express');
 
- const POSTcreateUsers = (req, res) => {
-   let name = req.body.name;
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+
+ const POSTcreateUsers = async(req, res) => {
+   let hoten = req.body.name;
    let email = req.body.email;
-   let password = req.body.password;
-   console.log('req body: ', 'hoten: ', name, 'email: ', email, 'matkhau: ', password)
-   if(name && email && password) {
+   let matkhau = await hashUserPassword(req.body.password);
+   console.log('req body: ', 'hoten: ', hoten, 'email: ', email, 'matkhau: ', matkhau)
+   if(hoten && email && matkhau) {
       connection.query(
          'Select * from Users where email = ?',[email],
          function(err, results){
@@ -16,7 +20,7 @@ const { json } = require('express');
             }
             else {
                connection.query(
-                  'Insert into Users (hoten, email, matkhau) values (?, ?, ?) ', [name, email, password],
+                  'Insert into Users (hoten, email, matkhau) values (?, ?, ?) ', [hoten, email, matkhau],
                   function(err, results){
                      if(err){
                         console.error('Loi he thong', err)
@@ -36,6 +40,18 @@ const { json } = require('express');
       res.status(501).json('Vui long nhap thong tin')
    }
 }
+
+let hashUserPassword = (password) => {
+   return new Promise(async(resolve, reject) => {
+       try {
+           var hashPassword = await bcrypt.hashSync(password, saltRounds);
+           resolve(hashPassword);
+       } catch (e) {
+           reject(e);
+       }
+   })
+}
+
             
 const GetCards = (req, res) => {
    connection.query(
@@ -49,9 +65,22 @@ const GetCards = (req, res) => {
    );
  }
 
- const GetCart = (req, res) => {
+ const GetRams = (req, res) => {
    connection.query(
-      'select * from Cart',
+      'select * from Products where Maloai = "RAM"',
+      function(err, results) {
+         console.log("Results = ", results); // results contains rows returned by server
+         // console.log("Fields = ",fields); // fields contains extra meta data about results, if available
+         
+          res.status(200).json(results)
+       }
+   );
+ }
+
+ const GetCart = (req, res) => {
+   const id = req.query.id
+   connection.query(
+      'select * from Cart where id = ?',[id],
       function(err, results) {
          console.log("Results = ", results); // results contains rows returned by server
          // console.log("Fields = ",fields); // fields contains extra meta data about results, if available
@@ -74,7 +103,7 @@ const GetCards = (req, res) => {
    connection.query(`Insert into Products (TenCard, SoLuong, GiaBan, HinhAnh) 
    values (?, ?, ?, ?)`,[TenCard, SoLuong, GiaBan, HinhAnh],
    function(err, results){
-      console.log("Results = ", results);
+     
       if(err) res.status(500).json('Loi he thong')
       res.status(200).json('TC');
    }
@@ -87,9 +116,8 @@ const GetCards = (req, res) => {
    let IdUser = req.body.IdUser;
    let title = req.body.title;
    let price = req.body.price;
-
-   console.log('====================================');
-   console.log('sp:', Idpro, IdUser, title, price);
+   let img = req.body.imageLink
+  
    console.log('====================================');
 
    connection.query(
@@ -117,8 +145,8 @@ const GetCards = (req, res) => {
            } else {
                // If no existing cart entry, you might want to insert a new row
                connection.query(
-                   'INSERT INTO cart (id, idProduct, title, quantity, price, Thanhtien) VALUES (?,?,?,1,?,price * 1)',
-                   [IdUser, Idpro, title, price, price],
+                   'INSERT INTO cart (id, idProduct, title, quantity, price, Thanhtien, img) VALUES (?,?,?,1,?,price * 1, ?)',
+                   [IdUser, Idpro, title, price, img],
                    function(insertErr, insertResults) {
                        if (insertErr) {
                            console.error(insertErr);
@@ -249,8 +277,48 @@ const tkiem = (req, res) =>{
  }
 
 
+const UpdateCong = (req, res) =>{
+   let idcart = req.query.idcart
+   let quantity = req.query.quantity
+   connection.query('UPDATE cart set quantity = quantity + 1, thanhtien = price * quantity where idcart = ?',[idcart],
+    function(err, results){
+      if(err) throw err;
+
+      res.status(200).json(results)
+      // res.status(200).json(results)
+   })
+ }
+
+ const UpdateTru = (req, res) =>{
+   let idcart = req.query.idcart
+   
+   
+      console.log(1)
+   connection.query('UPDATE cart set quantity = quantity - 1, thanhtien = price * quantity where idcart = ?',[idcart],
+    function(err, results){
+      if(err) throw err;
+
+      res.status(200).json(results)
+      // res.status(200).json(results)
+   })
+
+ }
+
+ const InseretHD = (req, res) =>{
+   console.log('====================================');
+   console.log(req.query.date);
+   console.log('====================================');
+   connection.query('Insert into HoaDon(id, ngaymua, tinhtrang)  values(?, CURDATE(), 0)',[req.query.id],
+    function(err, results){
+      if(err) throw err;
+
+      res.status(200).json(results)
+      // res.status(200).json(results)
+   })
+}
 
  module.exports = {
    getHome, POSTcreateUsers, CreateAccount, GetUsers, login, Getall, GetCards, GetCPUIs,
-    GetCPUAs, addCard, ADDCARDS, HomeCards, GetCart, ADDCART, tkiem, deleteItem
+    GetCPUAs, addCard, ADDCARDS, HomeCards, GetCart, ADDCART, tkiem, deleteItem, UpdateCong, UpdateTru, 
+    InseretHD, GetRams
  };
